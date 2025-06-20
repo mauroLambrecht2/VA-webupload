@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? '' // Same origin in production (no port needed)
   : 'http://localhost:8000'; // Backend URL for development
 
-const MAX_SIZE_MB = 100;
+const MAX_SIZE_MB = 250;
 const ALLOWED_TYPES = [
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
   'video/x-matroska', 'video/x-msvideo', 'video/x-flv', 'video/x-ms-wmv'
