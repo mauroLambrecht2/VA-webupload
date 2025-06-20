@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import './ClipUploaderFinal.css';
 
-// API Configuration - Single deployment setup
+// API Configuration - Clean URLs for production
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '' // Empty string for same-origin requests in production
+  ? '' // Same origin in production (no port needed)
   : 'http://localhost:8000'; // Backend URL for development
 
 const MAX_SIZE_MB = 100;
