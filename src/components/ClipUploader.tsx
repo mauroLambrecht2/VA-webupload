@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? '' // Same origin in production (no port needed)
   : 'http://localhost:8000'; // Backend URL for development
 
-const MAX_SIZE_MB = 250;
+const MAX_SIZE_MB = 100;
 const ALLOWED_TYPES = [
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
   'video/x-matroska', 'video/x-msvideo', 'video/x-flv', 'video/x-ms-wmv'
@@ -72,28 +72,49 @@ const ClipUploader: React.FC = () => {
           return prev;
         }
         return prev + Math.random() * 15;
-      });    }, 200);
+      });    }, 200);    // Create AbortController for timeout
+    const abortController = new AbortController();
+    const uploadTimeout = setTimeout(() => {
+      abortController.abort();
+    }, 5 * 60 * 1000); // 5 minute timeout
     
     fetch(`${API_BASE_URL}/upload`, {
       method: 'POST',
       body: formData,
+      signal: abortController.signal,
     })
     .then(async (res) => {
+      clearTimeout(uploadTimeout);
       clearInterval(progressInterval);
       setProgress(100);
       
+      console.log('Response status:', res.status);
+      console.log('Response headers:', res.headers);
+      
+      // Check if response is actually JSON
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await res.text();
+        console.error('Non-JSON response:', textResponse);
+        throw new Error(`Server returned ${res.status}: ${textResponse.substring(0, 200)}`);
+      }
+      
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Upload failed');
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
       return res.json();
     })
     .then((data) => {
       setResult(data);
-    })
-    .catch((err) => {
-      const errorMsg = err.message || 'Upload failed. Please try again.';
-      setError(errorMsg);
+    })    .catch((err) => {
+      clearTimeout(uploadTimeout);
+      if (err.name === 'AbortError') {
+        setError('Upload timeout. Please try with a smaller file.');
+      } else {
+        const errorMsg = err.message || 'Upload failed. Please try again.';
+        setError(errorMsg);
+      }
     })
     .finally(() => {
       setUploading(false);
