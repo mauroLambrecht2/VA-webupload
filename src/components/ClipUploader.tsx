@@ -3,7 +3,7 @@ import './ClipUploaderFinal.css';
 
 // API Configuration - Backend URL for different domains
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? process.env.BACKEND_URL // Your backend domain
+  ? 'https://va-expressupload.onrender.com' // Your backend domain
   : 'http://localhost:8000'; // Backend URL for development
 
 const MAX_SIZE_MB = 100;
