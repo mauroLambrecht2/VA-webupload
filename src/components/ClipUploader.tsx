@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import './ClipUploader.css';
 
@@ -15,12 +16,15 @@ const ALLOWED_TYPES = [
 
 const ClipUploader: React.FC = () => {
   const { user, loading, login, logout, refreshUser, error: authError } = useUser();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);  const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [uploadComplete, setUploadComplete] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [uploadStartTime, setUploadStartTime] = useState<number>(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<string>('');
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -69,21 +73,39 @@ const ClipUploader: React.FC = () => {
     
     uploadFile(file);
   };
-
   const uploadFile = (file: File) => {
     setUploading(true);
     setProgress(0);
+    setUploadComplete(false);
+    setUploadStartTime(Date.now());
+    
+    // Estimate initial upload time based on file size
+    const fileSizeMB = file.size / (1024 * 1024);
+    const estimatedSeconds = Math.max(10, fileSizeMB * 2); // Rough estimate: 2 seconds per MB, minimum 10 seconds
+    setEstimatedTimeRemaining(`~${Math.ceil(estimatedSeconds / 60)}m ${Math.ceil(estimatedSeconds % 60)}s`);
     
     const formData = new FormData();
     formData.append('video', file);
     
-    // Simulate progress for better UX
+    // Progress tracking with time estimation
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 90) {
           clearInterval(progressInterval);
           return prev;
         }
+        
+        const elapsed = (Date.now() - uploadStartTime) / 1000;
+        const progressPerSecond = prev / elapsed;
+        const remainingProgress = 100 - prev;
+        const estimatedRemainingSeconds = remainingProgress / progressPerSecond;
+        
+        if (estimatedRemainingSeconds > 0 && !isNaN(estimatedRemainingSeconds)) {
+          const minutes = Math.floor(estimatedRemainingSeconds / 60);
+          const seconds = Math.ceil(estimatedRemainingSeconds % 60);
+          setEstimatedTimeRemaining(minutes > 0 ? `~${minutes}m ${seconds}s` : `~${seconds}s`);
+        }
+        
         return prev + Math.random() * 15;
       });
     }, 200);
@@ -94,7 +116,7 @@ const ClipUploader: React.FC = () => {
       abortController.abort();
     }, 5 * 60 * 1000); // 5 minute timeout
 
-    fetch(`${API_BASE_URL}/api/upload`, {
+    fetch(`${API_BASE_URL}/upload`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -121,9 +143,15 @@ const ClipUploader: React.FC = () => {
         throw new Error(errorData.error || 'Upload failed');
       }
       return res.json();
-    })
-    .then((data) => {
+    })    .then((data) => {
       setResult(data);
+      setError(''); // Clear any previous errors
+      setUploadComplete(true);
+        // Show checkmark animation for 2 seconds, then reset
+      setTimeout(() => {
+        setUploadComplete(false);
+        setResult(null);
+      }, 2000);
     })
     .catch((err) => {
       clearTimeout(uploadTimeout);
@@ -149,12 +177,8 @@ const ClipUploader: React.FC = () => {
   const handleUploadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     inputRef.current?.click();
-  };
-  const handleMyClipsClick = () => {
-    // For now, just refresh user data to show current stats
-    // In the future, this could open a modal or navigate to a clips page
-    refreshUser();
-    alert(`You have uploaded ${user?.uploadStats.uploadCount || 0} clips using ${((user?.uploadStats.totalSize || 0) / (1024 * 1024)).toFixed(2)} MB of your 5GB quota.`);
+  };  const handleMyClipsClick = () => {
+    navigate('/clips');
   };
 
   const handleLogout = async () => {
@@ -275,17 +299,9 @@ const ClipUploader: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-
-      {uploading && (
+      </div>      {uploading && (
         <div className="progress-container">
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="progress-text">Uploading... {Math.round(progress)}%</div>
+          <div className="progress-spinner"></div>
         </div>
       )}
 
@@ -303,37 +319,17 @@ const ClipUploader: React.FC = () => {
             {error}
           </div>
         </div>
-      )}
-
-      {result && (
-        <div className="result-container">
-          <video 
-            src={result.previewUrl} 
-            controls 
-            className="video-preview"
-          />
-          
-          <div className="result-actions">
-            <a 
-              href={result.previewUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn btn-primary"
-            >
-              View Clip
-            </a>
-            <a 
-              href={result.downloadUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn btn-secondary"
-            >
-              Download
-            </a>
-          </div>
-          
-          <div className="result-id">
-            Clip ID: {result.id}
+      )}      {uploadComplete && (
+        <div className="upload-success">
+          <div className="checkmark-container">
+            <div className="checkmark">
+              <svg viewBox="0 0 52 52" className="checkmark-svg">
+                <circle cx="26" cy="26" r="25" fill="none" className="checkmark-circle"/>
+                <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" className="checkmark-check"/>
+              </svg>
+            </div>
+            <h3>Upload Complete!</h3>
+            <p>Opening your clip...</p>
           </div>
         </div>
       )}
