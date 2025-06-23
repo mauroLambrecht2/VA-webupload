@@ -12,7 +12,7 @@ interface UploadProgress {
 
 class DirectAzureUploadService {
   private baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://villainarc-clipupload-func.azurewebsites.net'
+    ? 'https://va-expressupload.onrender.com'
     : 'http://localhost:8000';
   // Get SAS token from your server for secure upload
   async getSASToken(filename: string, filesize: number): Promise<{sasUrl: string, uploadId: string}> {

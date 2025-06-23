@@ -32,7 +32,7 @@ class AzureUploadService {
   
   constructor() {
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://villainarcupload.azurewebsites.net'
+      ? 'https://villainarc-clipupload-func.azurewebsites.net'
       : 'http://localhost:7071';
     
     this.azureFunctionUrl = `${baseUrl}/api/upload`;
