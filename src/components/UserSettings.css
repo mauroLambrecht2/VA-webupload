@@ -1,0 +1,432 @@
+/* UserSettings.css */
+
+.user-settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.user-settings {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--error-color);
+  color: var(--text-light);
+}
+
+.settings-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.settings-tabs {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  width: 200px;
+  padding: 16px 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tab-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-color);
+}
+
+.tab-btn.active {
+  background: var(--accent-color);
+  color: var(--text-light);
+}
+
+.tab-btn svg {
+  flex-shrink: 0;
+}
+
+.settings-panel {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.settings-section h3 {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.setting-item {
+  margin-bottom: 20px;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-color);
+  font-weight: 500;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.setting-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.setting-item input[type="text"],
+.setting-item input[type="number"],
+.setting-item select {
+  width: 100%;
+  max-width: 300px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.setting-item input[type="text"]:focus,
+.setting-item input[type="number"]:focus,
+.setting-item select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.setting-item input[type="range"] {
+  width: 200px;
+  margin-right: 12px;
+  accent-color: var(--accent-color);
+}
+
+.setting-item input[type="range"] + span {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  min-width: 40px;
+}
+
+/* Settings Footer */
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-left,
+.footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+.reset-btn,
+.cancel-btn,
+.save-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.reset-btn:hover {
+  background: var(--warning-color);
+  color: var(--text-dark);
+  border-color: var(--warning-color);
+}
+
+.cancel-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.cancel-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.save-btn {
+  background: var(--accent-color);
+  color: var(--text-light);
+}
+
+.save-btn:hover:not(:disabled) {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Custom checkbox styling */
+.setting-item input[type="checkbox"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-secondary);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.setting-item input[type="checkbox"]:checked {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.setting-item input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.setting-item input[type="checkbox"]:focus {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Setting descriptions */
+.setting-description {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Setting groups */
+.setting-group {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.setting-group h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .user-settings-overlay {
+    padding: 12px;
+  }
+  
+  .user-settings {
+    max-height: 95vh;
+  }
+  
+  .settings-header {
+    padding: 16px;
+  }
+  
+  .settings-content {
+    flex-direction: column;
+  }
+  
+  .settings-tabs {
+    width: 100%;
+    padding: 12px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  
+  .tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 16px;
+  }
+  
+  .settings-panel {
+    padding: 16px;
+  }
+  
+  .settings-footer {
+    padding: 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .footer-left,
+  .footer-right {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .setting-item input[type="text"],
+  .setting-item input[type="number"],
+  .setting-item select {
+    max-width: none;
+  }
+}
+
+/* Dark theme specific adjustments */
+@media (prefers-color-scheme: dark) {
+  .user-settings {
+    background: rgba(20, 20, 20, 0.95);
+  }
+  
+  .settings-tabs {
+    background: rgba(15, 15, 15, 0.95);
+  }
+  
+  .settings-footer {
+    background: rgba(15, 15, 15, 0.95);
+  }
+}
+
+/* Animation for setting changes */
+.setting-item {
+  transition: all 0.2s ease;
+}
+
+.setting-item:hover {
+  transform: translateX(2px);
+}
+
+/* Validation states */
+.setting-item.error input,
+.setting-item.error select {
+  border-color: var(--error-color);
+}
+
+.setting-item.success input,
+.setting-item.success select {
+  border-color: var(--success-color);
+}
+
+/* Progress indicator for slider */
+.setting-item input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+  outline: none;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

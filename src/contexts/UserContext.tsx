@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { checkAuthStatus, logout as logoutUtil, initiateLogin } from '../utils/authUtils';
 
 // API Configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -61,19 +62,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [uploads, setUploads] = useState<UserUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const login = () => {
-    window.location.href = `${API_BASE_URL}/auth/discord`;
+    initiateLogin();
   };
 
   const logout = async () => {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'GET',
-        credentials: 'include'
-      });
+      await logoutUtil();
       setUser(null);
       setUploads([]);
+      setError(null);
     } catch (err) {
       console.error('Logout error:', err);
     }
@@ -82,22 +80,33 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const refreshUser = async () => {
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/api/user`, {
-        credentials: 'include'
-      });
+      const authData = await checkAuthStatus();
 
-      if (response.status === 401) {
+      if (authData.authenticated && authData.user) {
+        // Map the backend user data to frontend format
+        const mappedUser: User = {
+          id: authData.user.id,
+          username: authData.user.username,
+          discriminator: authData.user.discriminator,
+          avatar: authData.user.avatar,
+          verified: authData.user.verified || true,
+          loginTime: authData.user.loginTime || new Date().toISOString(),
+          guildMember: authData.user.guildMember,
+          hasRole: authData.user.hasRole,
+          uploadStats: {
+            totalSize: authData.user.totalUploadSize || 0,
+            uploadCount: authData.user.uploads?.length || 0,
+            quota: authData.user.quota || 5 * 1024 * 1024 * 1024, // 5GB
+            remainingQuota: (authData.user.quota || 5 * 1024 * 1024 * 1024) - (authData.user.totalUploadSize || 0),
+            quotaPercentUsed: ((authData.user.totalUploadSize || 0) / (authData.user.quota || 5 * 1024 * 1024 * 1024)) * 100
+          }
+        };
+        setUser(mappedUser);
+        console.log('✅ User data refreshed:', mappedUser);
+      } else {
         setUser(null);
-        setUploads([]);
-        return;
+        console.log('❌ No authenticated user found');
       }
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user data: ${response.status}`);
-      }
-
-      const userData = await response.json();
-      setUser(userData);
     } catch (err) {
       console.error('Error fetching user data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch user data');
@@ -108,8 +117,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const refreshUploads = async () => {
     if (!user) return;
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/user/uploads`, {
+    try {      const response = await fetch(`${API_BASE_URL}/auth/user/uploads`, {
         credentials: 'include'
       });
 
@@ -124,7 +132,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setError(err instanceof Error ? err.message : 'Failed to fetch uploads');
     }
   };
-
   // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -134,6 +141,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     };
 
     checkAuth();
+
+    // Set up periodic auth check every 5 minutes
+    const authCheckInterval = setInterval(async () => {
+      if (!loading) {
+        console.log('🔄 Periodic auth check...');
+        await refreshUser();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(authCheckInterval);
   }, []);
 
   // Fetch uploads when user is available
@@ -141,8 +158,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     if (user) {
       refreshUploads();
     }
-  }, [user]);
-  // Check for authentication success/failure in URL
+  }, [user]);  // Check for authentication success/failure in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const authStatus = urlParams.get('auth');
@@ -150,14 +166,30 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const authReason = urlParams.get('reason');
 
     if (authStatus === 'success') {
+      console.log('🎉 Authentication success detected in URL');
       // Remove query params and refresh user data
       window.history.replaceState({}, document.title, window.location.pathname);
-      refreshUser();
-    } else if (authError === 'auth_failed') {
+      // Give a moment for session to be fully established
+      setTimeout(() => {
+        refreshUser();
+      }, 500);
+    } else if (authStatus === 'failed') {
       let errorMessage = 'Discord authentication failed. Please try again.';
-      if (authReason === 'guild_access') {
-        errorMessage = 'Access denied. You must be a member of the VillainArc guild with the required role.';
+      
+      if (authError === 'guild_access') {
+        if (authReason === 'not_member') {
+          errorMessage = 'Access denied. You must be a member of the VillainArc Discord server.';
+        } else if (authReason === 'no_role') {
+          errorMessage = 'Access denied. You need the required role in the VillainArc Discord server.';
+        } else {
+          errorMessage = 'Access denied. You must be a member of the VillainArc Discord server with the required role.';
+        }
+      } else if (authError === 'oauth_failed') {
+        errorMessage = 'Discord OAuth failed. Please try again.';
+      } else if (authError === 'session_error') {
+        errorMessage = 'Session error occurred. Please try logging in again.';
       }
+      
       setError(errorMessage);
       window.history.replaceState({}, document.title, window.location.pathname);
     }

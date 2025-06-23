@@ -1,0 +1,40 @@
+.copy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.copy-link-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.copy-link-btn.copied {
+  background: rgba(0, 210, 106, 0.2);
+  border-color: rgba(0, 210, 106, 0.4);
+  color: #00d26a;
+}
+
+.copy-icon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.copy-link-btn:hover .copy-icon {
+  transform: scale(1.1);
+}
+
+.copy-text {
+  white-space: nowrap;
+}

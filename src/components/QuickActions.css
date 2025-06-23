@@ -1,0 +1,185 @@
+/* Quick Actions Component */
+.quick-actions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-action-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: white;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quick-action-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.quick-action-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Specific Button Styles */
+.view-btn:hover {
+  background: linear-gradient(135deg, #5865f2, #4752c4);
+  border-color: #5865f2;
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.4);
+}
+
+.share-btn:hover {
+  background: linear-gradient(135deg, #00d4aa, #00b894);
+  border-color: #00d4aa;
+  box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+}
+
+.share-btn.copied {
+  background: linear-gradient(135deg, #00b894, #00a085);
+  border-color: #00b894;
+  animation: pulse-success 0.5s ease-out;
+}
+
+.download-btn:hover {
+  background: linear-gradient(135deg, #fd79a8, #e84393);
+  border-color: #fd79a8;
+  box-shadow: 0 4px 12px rgba(253, 121, 168, 0.4);
+}
+
+.stats-btn:hover {
+  background: linear-gradient(135deg, #fdcb6e, #e17055);
+  border-color: #fdcb6e;
+  box-shadow: 0 4px 12px rgba(253, 203, 110, 0.4);
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeInTooltip 0.2s ease-out forwards;
+  pointer-events: none;
+}
+
+.tooltip::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.9);
+}
+
+/* Animations */
+@keyframes fadeInTooltip {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes pulse-success {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .quick-actions {
+    gap: 0.5rem;
+  }
+  
+  .quick-action-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .tooltip {
+    font-size: 0.7rem;
+    bottom: -28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .quick-action-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Focus States for Accessibility */
+.quick-action-btn:focus {
+  outline: 2px solid #5865f2;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .quick-action-btn {
+    border: 2px solid white;
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .quick-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .quick-action-btn {
+    transition: none;
+  }
+  
+  .tooltip {
+    animation: none;
+    opacity: 1;
+  }
+  
+  .quick-action-btn:hover {
+    transform: none;
+  }
+}

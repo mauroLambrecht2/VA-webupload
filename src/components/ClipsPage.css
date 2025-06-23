@@ -255,7 +255,8 @@
 
 .clip-meta {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.6);
 }
@@ -263,6 +264,7 @@
 .clip-actions {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -385,6 +387,161 @@
   min-width: 60px;
 }
 
+/* Analytics Section */
+.analytics-section {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem 0;
+}
+
+.analytics-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.analytics-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.analytics-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #5865f2;
+  margin-bottom: 0.5rem;
+}
+
+.analytics-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+/* Enhanced Filter Section */
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bulk-mode-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bulk-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.bulk-mode-btn.active {
+  background: linear-gradient(45deg, #5865f2, #4f46e5);
+  border-color: #5865f2;
+  box-shadow: 0 2px 8px rgba(88, 101, 242, 0.3);
+}
+
+/* Clip Checkbox for Bulk Selection */
+.clip-checkbox {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10;
+}
+
+.clip-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #5865f2;
+  cursor: pointer;
+}
+
+.clip-card {
+  position: relative;
+}
+
+.clip-card.selected {
+  border-color: #5865f2;
+  background: rgba(88, 101, 242, 0.1);
+}
+
+.clip-row {
+  position: relative;
+}
+
+.clip-row.selected {
+  background: rgba(88, 101, 242, 0.1);
+  border-left: 3px solid #5865f2;
+}
+
+/* Enhanced Clip Meta */
+.clip-views {
+  color: #4dabf7;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Copy Button Integration */
+.copy-btn {
+  min-width: auto !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+/* Quick Actions Enhancement */
+.clip-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.clip-actions .action-btn {
+  flex: 1;
+  min-width: 70px;
+  text-align: center;
+}
+
+/* Loading States */
+.analytics-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-content {
@@ -425,6 +582,42 @@
     flex: 1;
     text-align: center;
   }
+  
+  .analytics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .analytics-card {
+    padding: 1rem;
+  }
+  
+  .analytics-number {
+    font-size: 1.5rem;
+  }
+  
+  .filter-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .filter-toggle {
+    order: 1;
+  }
+  
+  .filter-actions {
+    order: 2;
+    justify-content: center;
+  }
+  
+  .clip-actions {
+    flex-direction: column;
+  }
+  
+  .clip-actions .action-btn {
+    flex: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -444,4 +637,37 @@
   .clip-card {
     padding: 1rem;
   }
+  
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .analytics-content {
+    padding: 0 1rem;
+  }
+  
+  .analytics-section {
+    padding: 1rem 0;
+  }
+}
+
+/* Enhanced Visual Hierarchy */
+.clips-page {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+  min-height: 100vh;
+}
+
+/* Smooth Transitions */
+.clip-card,
+.clip-row,
+.analytics-card,
+.bulk-mode-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus States for Accessibility */
+.bulk-mode-btn:focus,
+.clip-checkbox input:focus {
+  outline: 2px solid #5865f2;
+  outline-offset: 2px;
 }

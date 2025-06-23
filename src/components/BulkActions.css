@@ -1,0 +1,147 @@
+.bulk-actions {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.bulk-selection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.select-all input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.select-all input[type="checkbox"]:checked + .checkmark {
+  background: #5865f2;
+  border-color: #5865f2;
+}
+
+.select-all input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.selection-info {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bulk-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.bulk-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #5865f2, #4752c4);
+  color: white;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4752c4, #3b41a3);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ee5a52, #dc3545);
+  transform: translateY(-1px);
+}
+
+.clear-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.clear-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .bulk-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .bulk-selection {
+    justify-content: space-between;
+  }
+  
+  .bulk-buttons {
+    justify-content: center;
+  }
+  
+  .bulk-btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 120px;
+  }
+}

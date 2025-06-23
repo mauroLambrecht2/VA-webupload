@@ -1,0 +1,382 @@
+/* AdvancedUploadProgress.css */
+
+.advanced-upload-progress {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.progress-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.progress-summary {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.tasks-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.task-item {
+  border-bottom: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-item:hover {
+  background: var(--bg-hover);
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.spinner-small {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.task-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.task-size {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 150px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  min-width: 35px;
+  text-align: right;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-color);
+  transform: scale(1.05);
+}
+
+.cancel-btn:hover {
+  background: var(--error-color);
+  color: var(--text-light);
+}
+
+.retry-btn:hover {
+  background: var(--warning-color);
+  color: var(--text-dark);
+}
+
+.clear-btn:hover {
+  background: var(--text-muted);
+  color: var(--text-light);
+}
+
+.expand-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.task-details {
+  padding: 0 20px 16px 56px;
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border-color);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    padding-top: 0;
+    padding-bottom: 16px;
+  }
+}
+
+.details-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: var(--text-muted);
+  min-width: 100px;
+}
+
+.detail-value {
+  color: var(--text-color);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-item.error .detail-value {
+  color: var(--error-color);
+}
+
+.detail-item.success .detail-value {
+  color: var(--success-color);
+}
+
+.share-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-family: monospace;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+
+.share-link:hover {
+  text-decoration: underline;
+}
+
+.copy-btn {
+  width: 20px !important;
+  height: 20px !important;
+  padding: 0;
+  background: var(--accent-color);
+  color: var(--text-light);
+  border-radius: 4px;
+}
+
+.copy-btn:hover {
+  background: var(--accent-dark);
+  transform: scale(1.1);
+}
+
+/* Status-specific styles */
+.task-item.pending {
+  background: rgba(253, 203, 110, 0.05);
+}
+
+.task-item.uploading {
+  background: rgba(88, 101, 242, 0.05);
+}
+
+.task-item.processing {
+  background: rgba(116, 97, 195, 0.05);
+}
+
+.task-item.completed {
+  background: rgba(0, 184, 148, 0.05);
+}
+
+.task-item.error {
+  background: rgba(255, 107, 107, 0.05);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .progress-header {
+    padding: 12px 16px;
+  }
+  
+  .progress-header h3 {
+    font-size: 14px;
+  }
+  
+  .progress-summary {
+    font-size: 12px;
+  }
+  
+  .task-header {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  
+  .task-progress {
+    min-width: 100px;
+  }
+  
+  .progress-text {
+    font-size: 11px;
+    min-width: 30px;
+  }
+  
+  .task-details {
+    padding: 0 16px 12px 40px;
+  }
+  
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .detail-label {
+    min-width: auto;
+    font-size: 11px;
+  }
+  
+  .detail-value {
+    font-size: 11px;
+  }
+  
+  .share-link {
+    max-width: 150px;
+  }
+}
+
+/* Compact mode */
+.advanced-upload-progress.compact .task-header {
+  padding: 8px 12px;
+}
+
+.advanced-upload-progress.compact .task-name {
+  font-size: 13px;
+}
+
+.advanced-upload-progress.compact .task-size {
+  font-size: 11px;
+}
+
+.advanced-upload-progress.compact .progress-bar {
+  height: 4px;
+}
+
+.advanced-upload-progress.compact .action-btn {
+  width: 24px;
+  height: 24px;
+}
+
+/* Minimized mode */
+.advanced-upload-progress.minimized {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  z-index: 1000;
+}
+
+.advanced-upload-progress.minimized .tasks-list {
+  max-height: 200px;
+}

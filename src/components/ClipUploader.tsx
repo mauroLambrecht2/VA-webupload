@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useTaskManager } from './TaskManager';
 import './ClipUploader.css';
 
 // API Configuration - Backend URL for different domains
@@ -8,7 +9,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://va-expressupload.onrender.com' // Your backend domain
   : 'http://localhost:8000'; // Backend URL for development
 
-const MAX_SIZE_MB = 500;
+const MAX_SIZE_MB = 1024; // Updated to 1GB
 const ALLOWED_TYPES = [
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
   'video/x-matroska', 'video/x-msvideo', 'video/x-flv', 'video/x-ms-wmv'
@@ -16,15 +17,11 @@ const ALLOWED_TYPES = [
 
 const ClipUploader: React.FC = () => {
   const { user, loading, login, logout, refreshUser, error: authError } = useUser();
+  const { createTask, updateTask } = useTaskManager();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [dragActive, setDragActive] = useState(false);  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
-  const [uploadComplete, setUploadComplete] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [uploadStartTime, setUploadStartTime] = useState<number>(0);
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<string>('');
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -49,7 +46,6 @@ const ClipUploader: React.FC = () => {
 
   const handleFile = (file: File) => {
     setError('');
-    setResult(null);
     
     if (!ALLOWED_TYPES.includes(file.type)) {
       setError('Only video files are supported');
@@ -73,99 +69,118 @@ const ClipUploader: React.FC = () => {
     
     uploadFile(file);
   };
-  const uploadFile = (file: File) => {
-    setUploading(true);
-    setProgress(0);
-    setUploadComplete(false);
-    setUploadStartTime(Date.now());
-    
-    // Estimate initial upload time based on file size
-    const fileSizeMB = file.size / (1024 * 1024);
-    const estimatedSeconds = Math.max(10, fileSizeMB * 2); // Rough estimate: 2 seconds per MB, minimum 10 seconds
-    setEstimatedTimeRemaining(`~${Math.ceil(estimatedSeconds / 60)}m ${Math.ceil(estimatedSeconds % 60)}s`);
-    
-    const formData = new FormData();
-    formData.append('video', file);
-    
-    // Progress tracking with time estimation
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return prev;
-        }
-        
-        const elapsed = (Date.now() - uploadStartTime) / 1000;
-        const progressPerSecond = prev / elapsed;
-        const remainingProgress = 100 - prev;
-        const estimatedRemainingSeconds = remainingProgress / progressPerSecond;
-        
-        if (estimatedRemainingSeconds > 0 && !isNaN(estimatedRemainingSeconds)) {
-          const minutes = Math.floor(estimatedRemainingSeconds / 60);
-          const seconds = Math.ceil(estimatedRemainingSeconds % 60);
-          setEstimatedTimeRemaining(minutes > 0 ? `~${minutes}m ${seconds}s` : `~${seconds}s`);
-        }
-        
-        return prev + Math.random() * 15;
+
+  const uploadFile = async (file: File) => {
+    try {
+      // Create a task for this upload
+      const taskId = await createTask(file.name, file.size);
+      
+      // Start uploading
+      updateTask(taskId, { status: 'uploading' });
+      
+      const formData = new FormData();
+      formData.append('video', file);
+      
+      // Start upload and get upload ID for progress tracking
+      const uploadResponse = await fetch(`${API_BASE_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
       });
-    }, 200);
 
-    // Create AbortController for timeout
-    const abortController = new AbortController();
-    const uploadTimeout = setTimeout(() => {
-      abortController.abort();
-    }, 5 * 60 * 1000); // 5 minute timeout
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status}`);
+      }
 
-    fetch(`${API_BASE_URL}/upload`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-      signal: abortController.signal,
-    })
-    .then(async (res) => {
-      clearTimeout(uploadTimeout);
-      clearInterval(progressInterval);
-      setProgress(100);
+      const uploadResult = await uploadResponse.json();
       
-      console.log('Response status:', res.status);
-      console.log('Response headers:', res.headers);
+      if (!uploadResult.success || !uploadResult.uploadId) {
+        throw new Error(uploadResult.error || 'Upload failed');
+      }
+
+      // Connect to Server-Sent Events for real-time progress
+      const eventSource = new EventSource(`${API_BASE_URL}/api/upload/progress/${uploadResult.uploadId}`);
       
-      // Check if response is actually JSON
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const textResponse = await res.text();
-        console.error('Non-JSON response:', textResponse);
-        throw new Error(`Server returned ${res.status}: ${textResponse.substring(0, 200)}`);
-      }
+      let startTime = Date.now();
+      let lastTime = startTime;
+      let lastBytes = 0;
+        let uploadCompleted = false;
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-      return res.json();
-    })    .then((data) => {
-      setResult(data);
-      setError(''); // Clear any previous errors
-      setUploadComplete(true);
-        // Show checkmark animation for 2 seconds, then reset
-      setTimeout(() => {
-        setUploadComplete(false);
-        setResult(null);
-      }, 2000);
-    })
-    .catch((err) => {
-      clearTimeout(uploadTimeout);
-      if (err.name === 'AbortError') {
-        setError('Upload timeout. Please try with a smaller file.');
-      } else {
-        const errorMsg = err.message || 'Upload failed. Please try again.';
-        setError(errorMsg);
-      }
-    })
-    .finally(() => {
-      setUploading(false);
-      setTimeout(() => setProgress(0), 1000);
-    });
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'progress') {
+            const currentTime = Date.now();
+            const timeDiff = (currentTime - lastTime) / 1000;
+            const bytesDiff = data.bytesUploaded - lastBytes;
+            
+            // Calculate speed
+            const speed = timeDiff > 0 ? bytesDiff / timeDiff : 0;
+            const remainingBytes = data.totalBytes - data.bytesUploaded;
+            const estimatedTimeRemaining = speed > 0 ? remainingBytes / speed : 0;
+            
+            updateTask(taskId, {
+              progress: data.progress,
+              bytesUploaded: data.bytesUploaded,
+              speed,
+              estimatedTimeRemaining,
+              status: data.progress >= 95 ? 'processing' : 'uploading'
+            });
+            
+            lastTime = currentTime;
+            lastBytes = data.bytesUploaded;
+              } else if (data.type === 'complete') {
+            uploadCompleted = true;
+            eventSource.close();
+            
+            updateTask(taskId, { 
+              status: 'completed',
+              progress: 100 
+            });
+            
+            // Refresh user data to update quota information
+            refreshUser().catch(err => console.error('Failed to refresh user data:', err));
+            
+            // Open video in new tab after a short delay
+            setTimeout(() => {
+              window.open(data.shareLink, '_blank');
+            }, 1000);
+            
+          } else if (data.type === 'error') {
+            uploadCompleted = true;
+            eventSource.close();
+            
+            updateTask(taskId, { 
+              status: 'error',
+              error: data.error || 'Upload failed' 
+            });
+          } else if (data.type === 'close') {
+            // Server is closing the connection normally
+            eventSource.close();
+          }
+        } catch (parseError) {
+          console.error('Error parsing SSE data:', parseError);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        eventSource.close();
+        
+        // Only treat as an error if upload hasn't completed successfully
+        if (!uploadCompleted) {
+          updateTask(taskId, { 
+            status: 'error',
+            error: 'Connection lost during upload' 
+          });
+        }
+      };
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError('Failed to start upload. Please try again.');
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -177,7 +192,9 @@ const ClipUploader: React.FC = () => {
   const handleUploadClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     inputRef.current?.click();
-  };  const handleMyClipsClick = () => {
+  };
+
+  const handleMyClipsClick = () => {
     navigate('/clips');
   };
 
@@ -217,7 +234,8 @@ const ClipUploader: React.FC = () => {
       {/* User Auth - Simple addition */}
       <div className="auth-section">
         {loading ? (
-          <div className="auth-loading">Loading...</div>        ) : user ? (
+          <div className="auth-loading">Loading...</div>
+        ) : user ? (
           <div className="user-card">
             <div className="user-avatar-mini">
               <img src={user.avatar} alt="Avatar" />
@@ -235,7 +253,8 @@ const ClipUploader: React.FC = () => {
                   {((user.uploadStats.totalSize || 0) / (1024 * 1024 * 1024)).toFixed(1)}GB/5GB
                 </span>
               </div>
-            </div>            <div className="user-actions-mini">
+            </div>
+            <div className="user-actions-mini">
               <button onClick={handleMyClipsClick} className="action-btn" title="My Clips">📁</button>
               <button onClick={handleLogout} className="action-btn" title="Logout">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -277,7 +296,7 @@ const ClipUploader: React.FC = () => {
             </div>
             <div className="info-item">
               <div className="info-title">Max Size</div>
-              <div className="info-desc">Up to {MAX_SIZE_MB}MB per file</div>
+              <div className="info-desc">Up to 1GB per file</div>
             </div>
             <div className="info-item">
               <div className="info-title">Auto Sharing</div>
@@ -299,11 +318,7 @@ const ClipUploader: React.FC = () => {
             )}
           </div>
         </div>
-      </div>      {uploading && (
-        <div className="progress-container">
-          <div className="progress-spinner"></div>
-        </div>
-      )}
+      </div>
 
       {authError && (
         <div className="error-container">
@@ -317,19 +332,6 @@ const ClipUploader: React.FC = () => {
         <div className="error-container">
           <div className="error-message">
             {error}
-          </div>
-        </div>
-      )}      {uploadComplete && (
-        <div className="upload-success">
-          <div className="checkmark-container">
-            <div className="checkmark">
-              <svg viewBox="0 0 52 52" className="checkmark-svg">
-                <circle cx="26" cy="26" r="25" fill="none" className="checkmark-circle"/>
-                <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" className="checkmark-check"/>
-              </svg>
-            </div>
-            <h3>Upload Complete!</h3>
-            <p>Opening your clip...</p>
           </div>
         </div>
       )}
