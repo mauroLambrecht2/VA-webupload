@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useTaskManager } from './TaskManager';
+import AzureUploadService from '../services/AzureUploadService';
 import './ClipUploader.css';
 
 // API Configuration - Backend URL for different domains
@@ -69,7 +70,6 @@ const ClipUploader: React.FC = () => {
     
     uploadFile(file);
   };
-
   const uploadFile = async (file: File) => {
     try {
       // Create a task for this upload
@@ -77,109 +77,56 @@ const ClipUploader: React.FC = () => {
       
       // Start uploading
       updateTask(taskId, { status: 'uploading' });
-      
-      const formData = new FormData();
-      formData.append('video', file);
-      
-      // Start upload and get upload ID for progress tracking
-      const uploadResponse = await fetch(`${API_BASE_URL}/upload`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
+        // Use Azure Functions for ultra-fast upload
+      const result = await AzureUploadService.uploadFile(file, (progress) => {
+        // Update task with progress info that matches existing UI
+        updateTask(taskId, {
+          progress: progress.progress,
+          bytesUploaded: progress.bytesUploaded,
+          speed: progress.speed,
+          estimatedTimeRemaining: progress.eta,
+          status: progress.status === 'completed' ? 'completed' : 
+                 progress.status === 'processing' ? 'processing' : 'uploading'
+        });
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.status}`);
-      }
-
-      const uploadResult = await uploadResponse.json();
-      
-      if (!uploadResult.success || !uploadResult.uploadId) {
-        throw new Error(uploadResult.error || 'Upload failed');
-      }
-
-      // Connect to Server-Sent Events for real-time progress
-      const eventSource = new EventSource(`${API_BASE_URL}/api/upload/progress/${uploadResult.uploadId}`);
-      
-      let startTime = Date.now();
-      let lastTime = startTime;
-      let lastBytes = 0;
-        let uploadCompleted = false;
-      
-      eventSource.onmessage = (event) => {
+      // If Azure Functions provided metadata, store it as fallback
+      if (result.metadata) {
         try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'progress') {
-            const currentTime = Date.now();
-            const timeDiff = (currentTime - lastTime) / 1000;
-            const bytesDiff = data.bytesUploaded - lastBytes;
-            
-            // Calculate speed
-            const speed = timeDiff > 0 ? bytesDiff / timeDiff : 0;
-            const remainingBytes = data.totalBytes - data.bytesUploaded;
-            const estimatedTimeRemaining = speed > 0 ? remainingBytes / speed : 0;
-            
-            updateTask(taskId, {
-              progress: data.progress,
-              bytesUploaded: data.bytesUploaded,
-              speed,
-              estimatedTimeRemaining,
-              status: data.progress >= 95 ? 'processing' : 'uploading'
-            });
-            
-            lastTime = currentTime;
-            lastBytes = data.bytesUploaded;
-              } else if (data.type === 'complete') {
-            uploadCompleted = true;
-            eventSource.close();
-            
-            updateTask(taskId, { 
-              status: 'completed',
-              progress: 100 
-            });
-            
-            // Refresh user data to update quota information
-            refreshUser().catch(err => console.error('Failed to refresh user data:', err));
-            
-            // Open video in new tab after a short delay
-            setTimeout(() => {
-              window.open(data.shareLink, '_blank');
-            }, 1000);
-            
-          } else if (data.type === 'error') {
-            uploadCompleted = true;
-            eventSource.close();
-            
-            updateTask(taskId, { 
-              status: 'error',
-              error: data.error || 'Upload failed' 
-            });
-          } else if (data.type === 'close') {
-            // Server is closing the connection normally
-            eventSource.close();
-          }
-        } catch (parseError) {
-          console.error('Error parsing SSE data:', parseError);
+          const uploadToken = await AzureUploadService.getUploadToken();
+          await AzureUploadService.storeVideoMetadata(result.metadata, uploadToken);
+          console.log('✅ Metadata stored via fallback method');
+        } catch (metadataError) {
+          console.error('❌ Failed to store metadata via fallback:', metadataError);
+          // Continue anyway - upload was successful
         }
-      };
+      }// Upload completed successfully
+      updateTask(taskId, { 
+        status: 'completed',
+        progress: 100 
+      });
       
-      eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
-        eventSource.close();
-        
-        // Only treat as an error if upload hasn't completed successfully
-        if (!uploadCompleted) {
-          updateTask(taskId, { 
-            status: 'error',
-            error: 'Connection lost during upload' 
-          });
-        }
-      };
-
-    } catch (error) {
+      // Refresh user data to update quota information
+      refreshUser().catch(err => console.error('Failed to refresh user data:', err));
+      
+      // Redirect to video view page instead of opening download
+      setTimeout(() => {
+        window.location.href = result.shareLink; // Use location.href to navigate to the video view page
+      }, 1000);} catch (error) {
       console.error('Upload error:', error);
-      setError('Failed to start upload. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      setError(`Upload failed: ${errorMessage}`);
+      
+      // Update task status to error if it exists
+      const existingTasks = Object.keys(localStorage).filter(key => key.startsWith('task_'));
+      if (existingTasks.length > 0) {
+        const latestTaskKey = existingTasks[existingTasks.length - 1];
+        const taskId = latestTaskKey.replace('task_', '');
+        updateTask(taskId, { 
+          status: 'error',
+          error: errorMessage
+        });
+      }
     }
   };
 
