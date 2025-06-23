@@ -28,7 +28,6 @@ export interface UploadResult {
 
 class AzureUploadService {
   private azureFunctionUrl: string;
-  private getTokenUrl: string;
   
   constructor() {
     const baseUrl = process.env.NODE_ENV === 'production' 
@@ -36,7 +35,6 @@ class AzureUploadService {
       : 'http://localhost:7071';
     
     this.azureFunctionUrl = `${baseUrl}/api/upload`;
-    this.getTokenUrl = `${baseUrl}/api/get-upload-token`;
   }
   // Get upload token from backend session (existing auth flow)
   async getUploadToken(): Promise<string> {
