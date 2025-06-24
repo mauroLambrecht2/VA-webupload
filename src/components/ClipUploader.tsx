@@ -109,7 +109,7 @@ const ClipUploader: React.FC = () => {
       
       // Redirect to video view page instead of opening download
       setTimeout(() => {
-        const videoUrl = result.shareLink || `/v/${result.videoId}`;
+        const videoUrl = result.shareLink;
         const newTab = window.open(videoUrl, '_blank', 'noopener,noreferrer');
         if (newTab) {
           newTab.blur();
