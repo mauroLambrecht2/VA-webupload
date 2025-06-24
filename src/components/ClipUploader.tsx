@@ -10,7 +10,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://va-expressupload.onrender.com' // Your backend domain
   : 'http://localhost:8000'; // Backend URL for development
 
-const MAX_SIZE_MB = 1024; // Updated to 1GB
+const MAX_SIZE_MB = 300; // Updated to 300MB
 const ALLOWED_TYPES = [
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
   'video/x-matroska', 'video/x-msvideo', 'video/x-flv', 'video/x-ms-wmv'
@@ -54,7 +54,7 @@ const ClipUploader: React.FC = () => {
     }
     
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      setError(`File size exceeds ${MAX_SIZE_MB}MB limit`);
+      setError(`File size exceeds ${MAX_SIZE_MB}MB limit. Please upload a smaller file.`);
       return;
     }
     
