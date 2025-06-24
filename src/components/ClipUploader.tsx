@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useTaskManager } from './TaskManager';
 import AzureUploadService from '../services/AzureUploadService';
+import UserQuota from './UserQuota';
 import './ClipUploader.css';
 
 // API Configuration - Backend URL for different domains
@@ -88,13 +89,11 @@ const ClipUploader: React.FC = () => {
           status: progress.status === 'completed' ? 'completed' : 
                  progress.status === 'processing' ? 'processing' : 'uploading'
         });
-      });
-
-      // If Azure Functions provided metadata, store it as fallback
+      });      // If Azure Functions provided metadata, store it as fallback
       if (result.metadata) {
         try {
-          const uploadToken = await AzureUploadService.getUploadToken();
-          await AzureUploadService.storeVideoMetadata(result.metadata, uploadToken);
+          const tokenData = await AzureUploadService.getUploadToken();
+          await AzureUploadService.storeVideoMetadata(result.metadata, tokenData.token);
           console.log('✅ Metadata stored via fallback method');
         } catch (metadataError) {
           console.error('❌ Failed to store metadata via fallback:', metadataError);
@@ -176,39 +175,31 @@ const ClipUploader: React.FC = () => {
       <div className="logo">
         <div className="logo-image">VA</div>
         <div className="logo-text">VillainArc</div>
-      </div>
-
-      {/* User Auth - Simple addition */}
+      </div>      {/* User Auth - Simple addition */}
       <div className="auth-section">
         {loading ? (
           <div className="auth-loading">Loading...</div>
         ) : user ? (
-          <div className="user-card">
-            <div className="user-avatar-mini">
-              <img src={user.avatar} alt="Avatar" />
-            </div>
-            <div className="user-info-mini">
-              <span className="user-name">{user.username}</span>
-              <div className="quota-mini">
-                <div className="quota-bar">
-                  <div 
-                    className="quota-fill"
-                    style={{ width: `${Math.min((user.uploadStats.quotaPercentUsed || 0) * 100, 100)}%` }}
-                  ></div>
-                </div>
-                <span className="quota-text">
-                  {((user.uploadStats.totalSize || 0) / (1024 * 1024 * 1024)).toFixed(1)}GB/5GB
-                </span>
+          <div className="user-section">
+            <div className="user-card">
+              <div className="user-avatar-mini">
+                <img src={user.avatar} alt="Avatar" />
+              </div>
+              <div className="user-info-mini">
+                <span className="user-name">{user.username}</span>
+              </div>
+              <div className="user-actions-mini">
+                <button onClick={handleMyClipsClick} className="action-btn" title="My Clips">📁</button>
+                <button onClick={handleLogout} className="action-btn" title="Logout">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H4v16h10v-2h2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h10z"/>
+                  </svg>
+                </button>
               </div>
             </div>
-            <div className="user-actions-mini">
-              <button onClick={handleMyClipsClick} className="action-btn" title="My Clips">📁</button>
-              <button onClick={handleLogout} className="action-btn" title="Logout">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H4v16h10v-2h2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h10z"/>
-                </svg>
-              </button>
-            </div>
+            
+            {/* Real-time quota display */}
+            <UserQuota compact={true} />
           </div>
         ) : (
           <button className="discord-login-btn" onClick={login}>

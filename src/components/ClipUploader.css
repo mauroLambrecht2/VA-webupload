@@ -933,3 +933,10 @@
     image-rendering: crisp-edges;
   }
 }
+
+/* User section container */
+.user-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

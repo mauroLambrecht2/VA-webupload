@@ -35,9 +35,8 @@ class AzureUploadService {
       : 'http://localhost:7071';
     
     this.azureFunctionUrl = `${baseUrl}/api/upload`;
-  }
-  // Get upload token from backend session (existing auth flow)
-  async getUploadToken(): Promise<string> {
+  }  // Get upload token from backend session (existing auth flow)
+  async getUploadToken(): Promise<{token: string, userStats: any}> {
     const backendUrl = process.env.NODE_ENV === 'production' 
       ? 'https://va-expressupload.onrender.com'
       : 'http://localhost:8000';
@@ -63,7 +62,39 @@ class AzureUploadService {
 
     const data = await response.json();
     console.log('🔑 Token received successfully for user:', data.user?.username);
-    return data.uploadToken;
+    console.log('📊 User quota info:', {
+      used: (data.user.totalUploadSize / 1024 / 1024).toFixed(1) + ' MB',
+      remaining: (data.user.remainingQuota / 1024 / 1024).toFixed(1) + ' MB',
+      percentage: data.user.usagePercentage + '%'
+    });
+    
+    return {
+      token: data.uploadToken,
+      userStats: data.user
+    };
+  }
+
+  // Get user quota stats without getting upload token
+  async getUserQuotaStats(): Promise<any> {
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://va-expressupload.onrender.com'
+      : 'http://localhost:8000';
+
+    const response = await fetch(`${backendUrl}/api/user-quota-stats`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(`Failed to get quota stats: ${errorData.error || response.status}`);
+    }
+
+    const data = await response.json();
+    return data.stats;
   }
 
   // Upload file with progress callback that matches existing interface
@@ -88,18 +119,19 @@ class AzureUploadService {
         status: 'preparing',
         bytesUploaded: 0,
         totalBytes: file.size
-      });
+      });      console.log('🔑 Getting upload token from backend...');
+      const tokenData = await this.getUploadToken();
+      const uploadToken = tokenData.token;
+      const userStats = tokenData.userStats;
 
-      console.log('🔑 Getting upload token from backend...');
-      const uploadToken = await this.getUploadToken();      // Convert file to base64 for Azure Function
-      console.log('📁 Converting file to base64...');
-      const fileBuffer = await this.fileToArrayBuffer(file);
-      const base64Data = this.arrayBufferToBase64(fileBuffer);
-      console.log('📁 File converted, base64 length:', base64Data.length);
+      // Check if user has enough quota before starting upload
+      if (file.size > userStats.remainingQuota) {
+        throw new Error(`File size (${(file.size / 1024 / 1024).toFixed(1)} MB) exceeds remaining quota (${(userStats.remainingQuota / 1024 / 1024).toFixed(1)} MB)`);
+      }      console.log('✅ Quota check passed - proceeding with upload');
 
-      console.log('☁️ Uploading to Azure Function:', this.azureFunctionUrl);
+      console.log('☁️ Uploading directly to Azure Function:', this.azureFunctionUrl);
 
-      // Create XMLHttpRequest for progress tracking (matches existing UI expectations)
+      // Create XMLHttpRequest for progress tracking - send file directly without conversion
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         
@@ -170,15 +202,14 @@ class AzureUploadService {
           }
         };
 
-        xhr.onerror = () => reject(new Error('Upload failed'));
-
-        xhr.open('POST', this.azureFunctionUrl, true);
+        xhr.onerror = () => reject(new Error('Upload failed'));        xhr.open('POST', this.azureFunctionUrl, true);
         xhr.setRequestHeader('Authorization', `Bearer ${uploadToken}`);
         xhr.setRequestHeader('Content-Type', 'application/octet-stream');
         xhr.setRequestHeader('x-filename', file.name);
         xhr.setRequestHeader('x-filesize', file.size.toString());
         
-        xhr.send(base64Data);
+        // Send file directly - no memory conversion!
+        xhr.send(file);
       });
 
     } catch (error) {
@@ -215,28 +246,7 @@ class AzureUploadService {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       throw new Error(`Failed to store metadata: ${errorData.error || response.status}`);
-    }
-
-    console.log('✅ Video metadata stored in backend successfully');
-  }
-
-  // Helper methods
-  private async fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  private arrayBufferToBase64(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
+    }    console.log('✅ Video metadata stored in backend successfully');
   }
 }
 

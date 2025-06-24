@@ -1,0 +1,147 @@
+.user-quota {
+  background: #2c2c34;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #404040;
+  margin-bottom: 20px;
+}
+
+.user-quota.compact {
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.quota-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.quota-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.refresh-btn {
+  background: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.refresh-btn:hover {
+  background: #404040;
+  color: #fff;
+  border-color: #666;
+}
+
+.quota-progress {
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  color: #ccc;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.quota-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quota-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.quota-row .label {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.quota-row .value {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.quota-loading,
+.quota-error {
+  text-align: center;
+  color: #ccc;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.quota-error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #ff6b6b;
+}
+
+.quota-warning {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+  border-radius: 6px;
+  color: #ff4757;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Compact version adjustments */
+.user-quota.compact .quota-header h3 {
+  font-size: 14px;
+}
+
+.user-quota.compact .quota-details {
+  gap: 4px;
+}
+
+.user-quota.compact .quota-row {
+  padding: 2px 0;
+}
+
+.user-quota.compact .quota-row .label,
+.user-quota.compact .quota-row .value {
+  font-size: 12px;
+}
+
+.user-quota.compact .progress-text {
+  font-size: 12px;
+}
+
+.user-quota.compact .quota-warning {
+  margin-top: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
