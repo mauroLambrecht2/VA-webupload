@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useTaskManager } from './TaskManager';
 import AzureUploadService from '../services/AzureUploadService';
-import UserQuota from './UserQuota';
 import './ClipUploader.css';
 
 // API Configuration - Backend URL for different domains
@@ -180,26 +179,32 @@ const ClipUploader: React.FC = () => {
         {loading ? (
           <div className="auth-loading">Loading...</div>
         ) : user ? (
-          <div className="user-section">
-            <div className="user-card">
-              <div className="user-avatar-mini">
-                <img src={user.avatar} alt="Avatar" />
-              </div>
-              <div className="user-info-mini">
-                <span className="user-name">{user.username}</span>
-              </div>
-              <div className="user-actions-mini">
-                <button onClick={handleMyClipsClick} className="action-btn" title="My Clips">📁</button>
-                <button onClick={handleLogout} className="action-btn" title="Logout">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H4v16h10v-2h2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h10z"/>
-                  </svg>
-                </button>
+          <div className="user-card">
+            <div className="user-avatar-mini">
+              <img src={user.avatar} alt="Avatar" />
+            </div>
+            <div className="user-info-mini">
+              <span className="user-name">{user.username}</span>
+              <div className="quota-mini">
+                <div className="quota-bar">
+                  <div 
+                    className="quota-fill"
+                    style={{ width: `${Math.min((user.uploadStats?.quotaPercentUsed || 0) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                <span className="quota-text">
+                  {((user.uploadStats?.totalSize || 0) / (1024 * 1024 * 1024)).toFixed(1)}GB/5GB
+                </span>
               </div>
             </div>
-            
-            {/* Real-time quota display */}
-            <UserQuota compact={true} />
+            <div className="user-actions-mini">
+              <button onClick={handleMyClipsClick} className="action-btn" title="My Clips">📁</button>
+              <button onClick={handleLogout} className="action-btn" title="Logout">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 17v-3H9v-4h7V7l5 5-5 5M14 2a2 2 0 012 2v2h-2V4H4v16h10v-2h2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h10z"/>
+                </svg>
+              </button>
+            </div>
           </div>
         ) : (
           <button className="discord-login-btn" onClick={login}>
