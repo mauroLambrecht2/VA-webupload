@@ -91,9 +91,9 @@ const ClipUploader: React.FC = () => {
       });      // If Azure Functions provided metadata, store it as fallback
       if (result.metadata) {
         try {
-          const tokenData = await AzureUploadService.getUploadToken();
-          await AzureUploadService.storeVideoMetadata(result.metadata, tokenData.token);
-          console.log('✅ Metadata stored via fallback method');
+          // No need to get token or call storeVideoMetadata, handled by backend or can be implemented as a separate notification if needed
+          // Optionally, you can POST result.metadata to your backend here if you want to store metadata after upload
+          console.log('✅ Metadata available (direct-to-blob upload)');
         } catch (metadataError) {
           console.error('❌ Failed to store metadata via fallback:', metadataError);
           // Continue anyway - upload was successful
