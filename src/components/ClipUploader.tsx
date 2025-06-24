@@ -109,7 +109,13 @@ const ClipUploader: React.FC = () => {
       
       // Redirect to video view page instead of opening download
       setTimeout(() => {
-        window.location.href = result.shareLink; // Use location.href to navigate to the video view page
+        // Open the video in a new background tab (does not disrupt current tab)
+        const newTab = window.open(result.shareLink, '_blank', 'noopener,noreferrer');
+        if (newTab) {
+          newTab.blur();
+          window.focus();
+        }
+        // Do NOT change window.location.href, so user stays on upload page
       }, 1000);} catch (error) {
       console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
