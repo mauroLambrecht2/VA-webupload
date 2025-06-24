@@ -239,7 +239,7 @@ const ClipUploader: React.FC = () => {
             </div>
             <div className="info-item">
               <div className="info-title">Max Size</div>
-              <div className="info-desc">Up to 1GB per file</div>
+              <div className="info-desc">Up to 300MB per file</div>
             </div>
             <div className="info-item">
               <div className="info-title">Auto Sharing</div>
