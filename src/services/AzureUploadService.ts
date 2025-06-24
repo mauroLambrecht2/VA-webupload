@@ -170,11 +170,23 @@ class AzureUploadService {
               bytesUploaded: file.size,
               totalBytes: file.size
             });
-            // Optionally: notify backend to store metadata
+            // Notify backend to store metadata and trigger Discord webhook
+            fetch(`${this.backendUrl}/api/blob-upload-complete`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                blobName,
+                originalName: file.name,
+                size: file.size
+              })
+            }).catch(err => console.error('Failed to notify backend:', err));
+            // Optionally: generate share link based on blobName
+            const shareLink = `${this.backendUrl}/share/${blobName}`;
             resolve({
               success: true,
               videoId: blobName,
-              shareLink: '', // You can generate a share link based on blobName
+              shareLink,
               downloadUrl: sasUrl.split('?')[0],
               size: file.size,
               filename: file.name,
