@@ -171,6 +171,7 @@ class AzureUploadService {
               totalBytes: file.size
             });
             // Notify backend to store metadata and trigger Discord webhook
+            // Use backend-provided shareLink (from webhook response) for correct /v/:id URL
             fetch(`${this.backendUrl}/api/blob-upload-complete`, {
               method: 'POST',
               credentials: 'include',
@@ -180,24 +181,62 @@ class AzureUploadService {
                 originalName: file.name,
                 size: file.size
               })
-            }).catch(err => console.error('Failed to notify backend:', err));
-            // Optionally: generate share link based on blobName
-            const shareLink = `${this.backendUrl}/share/${blobName}`;
-            resolve({
-              success: true,
-              videoId: blobName,
-              shareLink,
-              downloadUrl: sasUrl.split('?')[0],
-              size: file.size,
-              filename: file.name,
-              metadata: {
-                videoId: blobName,
-                blobName,
-                blobUrl: sasUrl.split('?')[0],
-                size: file.size,
-                originalName: file.name
-              }
-            });
+            })
+              .then(async (res) => {
+                if (res.ok) {
+                  const data = await res.json();
+                  resolve({
+                    success: true,
+                    videoId: data.videoId,
+                    shareLink: data.shareLink, // always /v/:id
+                    downloadUrl: sasUrl.split('?')[0],
+                    size: file.size,
+                    filename: file.name,
+                    metadata: {
+                      videoId: blobName,
+                      blobName,
+                      blobUrl: sasUrl.split('?')[0],
+                      size: file.size,
+                      originalName: file.name
+                    }
+                  });
+                } else {
+                  resolve({
+                    success: true,
+                    videoId: blobName,
+                    shareLink: `/v/${blobName}`,
+                    downloadUrl: sasUrl.split('?')[0],
+                    size: file.size,
+                    filename: file.name,
+                    metadata: {
+                      videoId: blobName,
+                      blobName,
+                      blobUrl: sasUrl.split('?')[0],
+                      size: file.size,
+                      originalName: file.name
+                    }
+                  });
+                }
+              })
+              .catch(err => {
+                console.error('Failed to notify backend:', err);
+                resolve({
+                  success: true,
+                  videoId: blobName,
+                  shareLink: `/v/${blobName}`,
+                  downloadUrl: sasUrl.split('?')[0],
+                  size: file.size,
+                  filename: file.name,
+                  metadata: {
+                    videoId: blobName,
+                    blobName,
+                    blobUrl: sasUrl.split('?')[0],
+                    size: file.size,
+                    originalName: file.name
+                  }
+                });
+              });
+            return; // Prevent double resolve
           } else {
             reject(new Error(`Upload failed: ${xhr.statusText || xhr.status}`));
           }
