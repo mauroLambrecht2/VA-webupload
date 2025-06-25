@@ -10,7 +10,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://va-expressupload.onrender.com' // Your backend domain
   : 'http://localhost:8000'; // Backend URL for development
 
-const MAX_SIZE_MB = 300; // Updated to 300MB
+const MAX_SIZE_MB = 1024; // Updated to 1GB
 const ALLOWED_TYPES = [
   'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
   'video/x-matroska', 'video/x-msvideo', 'video/x-flv', 'video/x-ms-wmv'
@@ -54,7 +54,7 @@ const ClipUploader: React.FC = () => {
     }
     
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      setError(`File size exceeds ${MAX_SIZE_MB}MB limit. Please upload a smaller file.`);
+      setError(`File size exceeds ${MAX_SIZE_MB}MB limit`);
       return;
     }
     
@@ -88,17 +88,7 @@ const ClipUploader: React.FC = () => {
           status: progress.status === 'completed' ? 'completed' : 
                  progress.status === 'processing' ? 'processing' : 'uploading'
         });
-      });      // If Azure Functions provided metadata, store it as fallback
-      if (result.metadata) {
-        try {
-          // No need to get token or call storeVideoMetadata, handled by backend or can be implemented as a separate notification if needed
-          // Optionally, you can POST result.metadata to your backend here if you want to store metadata after upload
-          console.log('✅ Metadata available (direct-to-blob upload)');
-        } catch (metadataError) {
-          console.error('❌ Failed to store metadata via fallback:', metadataError);
-          // Continue anyway - upload was successful
-        }
-      }// Upload completed successfully
+      });      // Upload completed successfully
       updateTask(taskId, { 
         status: 'completed',
         progress: 100 
@@ -109,12 +99,7 @@ const ClipUploader: React.FC = () => {
       
       // Redirect to video view page instead of opening download
       setTimeout(() => {
-        const videoUrl = result.shareLink;
-        const newTab = window.open(videoUrl, '_blank', 'noopener,noreferrer');
-        if (newTab) {
-          newTab.blur();
-          window.focus();
-        }
+        window.location.href = result.shareLink; // Use location.href to navigate to the video view page
       }, 1000);} catch (error) {
       console.error('Upload error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
@@ -244,7 +229,7 @@ const ClipUploader: React.FC = () => {
             </div>
             <div className="info-item">
               <div className="info-title">Max Size</div>
-              <div className="info-desc">Up to 300MB per file</div>
+              <div className="info-desc">Up to 1GB per file</div>
             </div>
             <div className="info-item">
               <div className="info-title">Auto Sharing</div>
